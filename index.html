@@ -1,0 +1,1507 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Call Center Performance Dashboard - Responsive</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 10px;
+      }
+
+      .dashboard-container {
+        max-width: 1600px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.98);
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: clamp(1.5em, 4vw, 2.5em);
+        margin-bottom: 10px;
+        font-weight: 700;
+      }
+
+      .header p {
+        font-size: clamp(0.9em, 2vw, 1.1em);
+        opacity: 0.95;
+      }
+
+      /* Mobile Menu Button */
+      .mobile-menu-btn {
+        display: none;
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid white;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 15px;
+        font-size: 0.9em;
+        font-weight: 600;
+      }
+
+      .mobile-menu-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      /* Navigation Tabs */
+      .nav-tabs {
+        display: none;
+        background: #f8f9fa;
+        padding: 10px;
+        border-bottom: 2px solid #dee2e6;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .nav-tabs button {
+        background: white;
+        border: 1px solid #dee2e6;
+        padding: 8px 16px;
+        margin: 0 5px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-size: 0.9em;
+        white-space: nowrap;
+      }
+
+      .nav-tabs button.active {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+      }
+
+      .nav-tabs button:hover:not(.active) {
+        background: #e9ecef;
+      }
+
+      /* Summary Cards */
+      .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        padding: 20px;
+        background: #f8f9fa;
+      }
+
+      .summary-card {
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        transition:
+          transform 0.3s,
+          box-shadow 0.3s;
+      }
+
+      .summary-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      }
+
+      .summary-card .value {
+        font-size: clamp(1.8em, 3vw, 2.5em);
+        font-weight: bold;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .summary-card .label {
+        color: #6c757d;
+        margin-top: 5px;
+        font-size: clamp(0.7em, 1.5vw, 0.9em);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      /* Department Table Container */
+      .department-table-container {
+        margin: 20px;
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        overflow-x: auto;
+      }
+
+      .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .department-table {
+        width: 100%;
+        min-width: 500px;
+        border-collapse: collapse;
+        font-size: clamp(0.8em, 1.5vw, 1.1em);
+      }
+
+      .department-table th {
+        background: #f8f9fa;
+        padding: 12px 8px;
+        text-align: center;
+        font-weight: 600;
+        border: 1px solid #dee2e6;
+        color: #2c3e50;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+
+      .department-table td {
+        padding: 10px 8px;
+        text-align: center;
+        border: 1px solid #dee2e6;
+      }
+
+      .department-table .dept-name {
+        text-align: left;
+        font-weight: 600;
+        padding-left: 15px;
+      }
+
+      .department-table tr.excellent {
+        background: #d4edda;
+      }
+
+      .department-table tr.good {
+        background: #fff3cd;
+      }
+
+      .department-table tr.poor {
+        background: #f8d7da;
+      }
+
+      .table-title {
+        font-size: clamp(1.1em, 2.5vw, 1.4em);
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 15px;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 10px;
+      }
+
+      .table-summary {
+        background: #e7f3ff;
+        padding: 12px;
+        margin-bottom: 15px;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+        font-size: clamp(0.8em, 1.5vw, 0.95em);
+      }
+
+      /* Charts Grid */
+      .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        padding: 20px;
+      }
+
+      .chart-container {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        min-height: 350px;
+      }
+
+      .chart-container.full-width {
+        grid-column: 1 / -1;
+      }
+
+      .chart-container.tall {
+        min-height: 500px;
+      }
+
+      .chart-wrapper {
+        position: relative;
+        height: 300px;
+      }
+
+      .chart-wrapper.tall {
+        height: 450px;
+      }
+
+      .chart-wrapper.short {
+        height: 250px;
+      }
+
+      .chart-title {
+        font-size: clamp(1em, 2vw, 1.4em);
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 10px;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 8px;
+      }
+
+      .chart-explanation {
+        background: #f0f3ff;
+        border-left: 4px solid #667eea;
+        padding: 10px;
+        margin-bottom: 15px;
+        border-radius: 4px;
+        font-size: clamp(0.75em, 1.5vw, 0.95em);
+        color: #495057;
+        line-height: 1.5;
+      }
+
+      .chart-explanation strong {
+        color: #667eea;
+        display: block;
+        margin-bottom: 5px;
+      }
+
+      /* Insight Box */
+      .insight-box {
+        background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+        border-radius: 10px;
+        padding: 20px;
+        margin: 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .insight-box h3 {
+        color: #2d3436;
+        margin-bottom: 15px;
+        font-size: clamp(1em, 2vw, 1.3em);
+      }
+
+      .insight-list {
+        list-style: none;
+      }
+
+      .insight-list li {
+        background: white;
+        padding: 10px;
+        margin-bottom: 8px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        font-size: clamp(0.8em, 1.5vw, 0.95em);
+        flex-wrap: wrap;
+      }
+
+      .insight-list li:before {
+        content: "→";
+        margin-right: 8px;
+        color: #667eea;
+        font-weight: bold;
+        font-size: 1.2em;
+      }
+
+      .performance-indicator {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: 600;
+        margin-left: 8px;
+        white-space: nowrap;
+      }
+
+      .excellent {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .good {
+        background: #cce5ff;
+        color: #004085;
+      }
+
+      .needs-improvement {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .footer {
+        background: #2c3e50;
+        color: white;
+        text-align: center;
+        padding: 15px;
+        font-size: clamp(0.7em, 1.5vw, 0.9em);
+      }
+
+      /* Mobile-specific styles */
+      @media (max-width: 768px) {
+        body {
+          padding: 5px;
+        }
+
+        .dashboard-container {
+          border-radius: 10px;
+        }
+
+        .header {
+          padding: 15px;
+        }
+
+        .mobile-menu-btn {
+          display: inline-block;
+        }
+
+        .nav-tabs {
+          display: flex;
+        }
+
+        .summary-cards {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10px;
+          padding: 15px;
+        }
+
+        .summary-card {
+          padding: 10px;
+        }
+
+        .charts-grid {
+          grid-template-columns: 1fr;
+          padding: 15px;
+          gap: 15px;
+        }
+
+        .chart-container {
+          padding: 15px;
+        }
+
+        .chart-container.full-width {
+          grid-column: 1;
+        }
+
+        .department-table-container {
+          margin: 15px;
+          padding: 15px;
+        }
+
+        .insight-box {
+          margin: 15px;
+          padding: 15px;
+        }
+
+        .chart-wrapper {
+          height: 250px;
+        }
+
+        .chart-wrapper.tall {
+          height: 350px;
+        }
+
+        /* Mobile section visibility */
+        .mobile-section {
+          display: none;
+        }
+
+        .mobile-section.active {
+          display: block;
+        }
+
+        /* Hide some sections by default on mobile */
+        .charts-grid,
+        .department-table-container {
+          display: none;
+        }
+
+        .charts-grid.active,
+        .department-table-container.active {
+          display: grid;
+        }
+
+        .department-table-container.active {
+          display: block;
+        }
+      }
+
+      /* Tablet styles */
+      @media (min-width: 769px) and (max-width: 1024px) {
+        .summary-cards {
+          grid-template-columns: repeat(3, 1fr);
+        }
+
+        .charts-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .chart-container.full-width {
+          grid-column: 1 / -1;
+        }
+      }
+
+      /* Large desktop styles */
+      @media (min-width: 1400px) {
+        .summary-cards {
+          grid-template-columns: repeat(6, 1fr);
+        }
+
+        .charts-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      /* Print styles */
+      @media print {
+        body {
+          background: white;
+          padding: 0;
+        }
+
+        .dashboard-container {
+          box-shadow: none;
+        }
+
+        .mobile-menu-btn,
+        .nav-tabs {
+          display: none !important;
+        }
+
+        .chart-container {
+          break-inside: avoid;
+        }
+      }
+
+      /* Loading spinner */
+      .loading-spinner {
+        display: none;
+        text-align: center;
+        padding: 50px;
+      }
+
+      .loading-spinner.active {
+        display: block;
+      }
+
+      .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="dashboard-container">
+      <div class="header">
+        <h1>📊 Monster Vo Performance Dashboard</h1>
+        <p id="date-range">Full Performance Analysis Including All Scores</p>
+        <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+          ☰ View Sections
+        </button>
+      </div>
+
+      <!-- Mobile Navigation Tabs -->
+      <div class="nav-tabs" id="navTabs">
+        <button class="active" onclick="showSection('summary')">Summary</button>
+        <button onclick="showSection('insights')">Insights</button>
+        <button onclick="showSection('departments')">Departments</button>
+        <button onclick="showSection('offices')">Offices</button>
+        <button onclick="showSection('members')">Team Members</button>
+        <button onclick="showSection('timeseries')">Time Series</button>
+        <button onclick="showSection('issues')">Issues</button>
+      </div>
+
+      <!-- Summary Section -->
+      <div id="summarySection" class="mobile-section active">
+        <div class="summary-cards" id="summary-cards">
+          <div class="summary-card">
+            <div class="value">759</div>
+            <div class="label">Total Calls</div>
+          </div>
+          <div class="summary-card">
+            <div class="value">94.7%</div>
+            <div class="label">Avg Score</div>
+          </div>
+          <div class="summary-card">
+            <div class="value">418</div>
+            <div class="label">Perfect</div>
+          </div>
+          <div class="summary-card">
+            <div class="value">55.1%</div>
+            <div class="label">Perfect Rate</div>
+          </div>
+          <div class="summary-card">
+            <div class="value">166</div>
+            <div class="label">Members</div>
+          </div>
+          <div class="summary-card">
+            <div class="value">21</div>
+            <div class="label">Offices</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Insights Section -->
+      <div id="insightsSection" class="mobile-section active">
+        <div class="insight-box">
+          <h3>🎯 Key Insights & Actions</h3>
+
+          <ul class="insight-list">
+            <li>
+              Top Performers: ODS REM leads with 100.0% average
+              <span class="performance-indicator excellent">Excellent</span>
+            </li>
+            <li>
+              Needs Attention: Confirmations at 82.7% needs improvement
+              <span class="performance-indicator needs-improvement"
+                >Critical</span
+              >
+            </li>
+            <li>418 calls (55.1%) achieved perfect 100% scores</li>
+            <li>Top Team Member: GS MB - Nia Owens with 100.0% average</li>
+            <li>51 team members maintain perfect scores</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Department Table Section -->
+      <div
+        id="departmentsSection"
+        class="mobile-section department-table-container"
+      >
+        <h2 class="table-title">Department Performance Summary</h2>
+        <div class="table-summary">
+          <strong>Overall VOs Completion Rate: 92.0%</strong><br />
+          Total Expected: 212 | Total Completed: 759
+        </div>
+        <div class="table-wrapper">
+          <table class="department-table">
+            <thead>
+              <tr>
+                <th>Department</th>
+                <th>Expected</th>
+                <th>Completed</th>
+                <th>Score</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="excellent">
+                <td class="dept-name">ODS REM</td>
+                <td>15</td>
+                <td>10</td>
+                <td><strong>100.0%</strong></td>
+                <td>🟢</td>
+              </tr>
+              <tr class="excellent">
+                <td class="dept-name">VBA</td>
+                <td>15</td>
+                <td>35</td>
+                <td><strong>99.4%</strong></td>
+                <td>🟢</td>
+              </tr>
+              <tr class="excellent">
+                <td class="dept-name">ODR</td>
+                <td>15</td>
+                <td>108</td>
+                <td><strong>98.9%</strong></td>
+                <td>🟢</td>
+              </tr>
+              <tr class="good">
+                <td class="dept-name">AUD MB</td>
+                <td>15</td>
+                <td>147</td>
+                <td><strong>97.7%</strong></td>
+                <td>🟡</td>
+              </tr>
+              <tr class="good">
+                <td class="dept-name">Activations</td>
+                <td>40</td>
+                <td>118</td>
+                <td><strong>96.5%</strong></td>
+                <td>🟡</td>
+              </tr>
+              <tr class="good">
+                <td class="dept-name">ODS</td>
+                <td>15</td>
+                <td>66</td>
+                <td><strong>95.9%</strong></td>
+                <td>🟡</td>
+              </tr>
+              <tr class="good">
+                <td class="dept-name">Downstream</td>
+                <td>20</td>
+                <td>75</td>
+                <td><strong>95.2%</strong></td>
+                <td>🟡</td>
+              </tr>
+              <tr class="poor">
+                <td class="dept-name">IDS</td>
+                <td>62</td>
+                <td>186</td>
+                <td><strong>87.1%</strong></td>
+                <td>🔴</td>
+              </tr>
+              <tr class="poor">
+                <td class="dept-name">Confirmations</td>
+                <td>15</td>
+                <td>14</td>
+                <td><strong>82.7%</strong></td>
+                <td>🔴</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Charts Section -->
+      <div class="charts-grid" id="chartsSection">
+        <!-- Office Performance -->
+        <div
+          id="officesSection"
+          class="chart-container full-width mobile-section"
+        >
+          <h2 class="chart-title">
+            Office Performance Comparison (Excluding Perfect Scores)
+          </h2>
+
+          <div
+            style="
+              background: #e3f2fd;
+              border-left: 4px solid #2196f3;
+              padding: 10px;
+              margin-bottom: 15px;
+              font-size: 0.9em;
+              color: #1565c0;
+              border-radius: 5px;
+            "
+          >
+            📊 <strong>Scale Optimization:</strong> Charts filtered to show
+            meaningful performance differences. Perfect scores and high
+            performers may be excluded from some views for clarity.
+          </div>
+          <div class="chart-explanation">
+            <strong>What this shows:</strong>
+            Office performance showing only offices with ≤98% scores (6 of 9
+            offices) to reveal meaningful performance differences and
+            improvement opportunities. Green = meeting targets, Red = needs
+            improvement.
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="officeComparison"></canvas>
+          </div>
+        </div>
+
+        <!-- Team Members -->
+        <div
+          id="membersSection"
+          class="chart-container full-width tall mobile-section"
+        >
+          <h2 class="chart-title">Team Member Rankings</h2>
+
+          <div
+            style="
+              background: #e3f2fd;
+              border-left: 4px solid #2196f3;
+              padding: 10px;
+              margin-bottom: 15px;
+              font-size: 0.9em;
+              color: #1565c0;
+              border-radius: 5px;
+            "
+          >
+            📊 <strong>Scale Optimization:</strong> Charts filtered to show
+            meaningful performance differences. Perfect scores and high
+            performers may be excluded from some views for clarity.
+          </div>
+          <div class="chart-explanation">
+            <strong>What this shows:</strong>
+            Team members ranked from LOWEST to HIGHEST performance (75-99%
+            range). Color coding: Red (<85%), Orange (85%+), Yellow (88%+),
+            Light green (92%+), Green (95%+), Dark green (98%+). Bottom
+            performers show coaching opportunities.
+          </div>
+          <div class="chart-wrapper tall">
+            <canvas id="teamMemberRanking"></canvas>
+          </div>
+        </div>
+
+        <!-- Score Distribution -->
+        <div class="chart-container mobile-section">
+          <h2 class="chart-title">
+            Score Distribution (Excluding Perfect Scores)
+          </h2>
+
+          <div
+            style="
+              background: #e3f2fd;
+              border-left: 4px solid #2196f3;
+              padding: 10px;
+              margin-bottom: 15px;
+              font-size: 0.9em;
+              color: #1565c0;
+              border-radius: 5px;
+            "
+          >
+            📊 <strong>Scale Optimization:</strong> Charts filtered to show
+            meaningful performance differences. Perfect scores and high
+            performers may be excluded from some views for clarity.
+          </div>
+          <div class="chart-explanation">
+            <strong>What this shows:</strong>
+            Distribution focusing on lower score ranges (71 calls) where
+            improvement efforts should be targeted. High performers (90%+) are
+            excluded for scale clarity.
+          </div>
+          <div class="chart-wrapper short">
+            <canvas id="scoreDistribution"></canvas>
+          </div>
+        </div>
+
+        <!-- Perfect Breakdown -->
+        <div class="chart-container mobile-section">
+          <h2 class="chart-title">Perfect vs Imperfect</h2>
+
+          <div
+            style="
+              background: #e3f2fd;
+              border-left: 4px solid #2196f3;
+              padding: 10px;
+              margin-bottom: 15px;
+              font-size: 0.9em;
+              color: #1565c0;
+              border-radius: 5px;
+            "
+          >
+            📊 <strong>Scale Optimization:</strong> Charts filtered to show
+            meaningful performance differences. Perfect scores and high
+            performers may be excluded from some views for clarity.
+          </div>
+          <div class="chart-explanation">
+            <strong>What this shows:</strong>
+            56.8% of calls achieved perfect scores.
+          </div>
+          <div class="chart-wrapper short">
+            <canvas id="perfectBreakdown"></canvas>
+          </div>
+        </div>
+
+        <!-- Office Performance Time Series -->
+        <div
+          id="timeSeriesSection"
+          class="chart-container full-width mobile-section"
+        >
+          <h2 class="chart-title">📈 Office Performance Over Time</h2>
+
+          <div
+            style="
+              background: #e3f2fd;
+              border-left: 4px solid #2196f3;
+              padding: 10px;
+              margin-bottom: 15px;
+              font-size: 0.9em;
+              color: #1565c0;
+              border-radius: 5px;
+            "
+          >
+            📊 <strong>Time Series Analysis:</strong> Each office shown as a
+            different colored line tracking performance over time. X-axis shows
+            dates, Y-axis shows accuracy percentage.
+          </div>
+          <div class="chart-explanation">
+            <strong>What this shows:</strong>
+            Daily performance trends for each office over time. Each colored
+            line represents a different office, allowing you to compare
+            performance trajectories and identify offices with improving or
+            declining trends.
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="officeTimeSeries"></canvas>
+          </div>
+        </div>
+
+        <!-- Issues -->
+        <div
+          id="issuesSection"
+          class="chart-container full-width mobile-section"
+        >
+          <h2 class="chart-title">Most Common Call Issues</h2>
+
+          <div
+            style="
+              background: #e3f2fd;
+              border-left: 4px solid #2196f3;
+              padding: 10px;
+              margin-bottom: 15px;
+              font-size: 0.9em;
+              color: #1565c0;
+              border-radius: 5px;
+            "
+          >
+            📊 <strong>Scale Optimization:</strong> Charts filtered to show
+            meaningful performance differences. Perfect scores and high
+            performers may be excluded from some views for clarity.
+          </div>
+          <div class="chart-explanation">
+            <strong>What this shows:</strong>
+            Top quality checkpoints that agents fail most frequently.
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="questionFailures"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <p>
+          Dashboard Generated: <span id="generation-time"></span><br />
+          Complete analysis of 759 call evaluations with enhanced scale
+          visualization
+        </p>
+      </div>
+    </div>
+
+    <div class="loading-spinner" id="loadingSpinner">
+      <div class="spinner"></div>
+      <p>Loading charts...</p>
+    </div>
+
+    <script>
+      // Mobile navigation
+      let currentSection = "summary";
+
+      function toggleMobileMenu() {
+        const navTabs = document.getElementById("navTabs");
+        navTabs.style.display =
+          navTabs.style.display === "flex" ? "none" : "flex";
+      }
+
+      function showSection(section) {
+        // Update active tab
+        const buttons = document.querySelectorAll(".nav-tabs button");
+        buttons.forEach((btn) => btn.classList.remove("active"));
+        event.target.classList.add("active");
+
+        // Show/hide sections based on selection
+        const allSections = [
+          "summarySection",
+          "insightsSection",
+          "departmentsSection",
+          "officesSection",
+          "membersSection",
+          "issuesSection",
+          "chartsSection",
+        ];
+
+        // On mobile, hide all then show selected
+        if (window.innerWidth <= 768) {
+          allSections.forEach((id) => {
+            const elem = document.getElementById(id);
+            if (elem) elem.style.display = "none";
+          });
+
+          // Show selected section
+          switch (section) {
+            case "summary":
+              document.getElementById("summarySection").style.display = "block";
+              break;
+            case "insights":
+              document.getElementById("insightsSection").style.display =
+                "block";
+              break;
+            case "departments":
+              document.getElementById("departmentsSection").style.display =
+                "block";
+              break;
+            case "offices":
+              document.getElementById("chartsSection").style.display = "grid";
+              document.getElementById("officesSection").style.display = "block";
+              break;
+            case "members":
+              document.getElementById("chartsSection").style.display = "grid";
+              document.getElementById("membersSection").style.display = "block";
+              break;
+            case "timeseries":
+              document.getElementById("chartsSection").style.display = "grid";
+              document.getElementById("timeSeriesSection").style.display =
+                "block";
+              break;
+            case "issues":
+              document.getElementById("chartsSection").style.display = "grid";
+              document.getElementById("issuesSection").style.display = "block";
+              break;
+          }
+        }
+      }
+
+      // Data
+      const allTeamMembers = [
+        {
+          name: "IDS A3N - Brandon Harris",
+          score: 75.0,
+          calls: 6,
+        },
+        {
+          name: "GS WST - Craig Bell",
+          score: 75.0,
+          calls: 5,
+        },
+        {
+          name: "WST DS - Askari Blair",
+          score: 75.0,
+          calls: 4,
+        },
+        {
+          name: "GS WST - Craig Jolly",
+          score: 75.6,
+          calls: 3,
+        },
+        {
+          name: "CAP ACT - Josefe Troncillito",
+          score: 76.7,
+          calls: 1,
+        },
+        {
+          name: "WST ACT - Christopher Thomas",
+          score: 80.0,
+          calls: 1,
+        },
+        {
+          name: "IDS A3N - Marquis Player",
+          score: 84.0,
+          calls: 6,
+        },
+        {
+          name: "DS MB - Daniela JenkinsMena",
+          score: 84.7,
+          calls: 5,
+        },
+        {
+          name: "Conf - Jerry Kahl",
+          score: 85.0,
+          calls: 2,
+        },
+        {
+          name: "GS WST - Mariah Brown",
+          score: 85.3,
+          calls: 15,
+        },
+        {
+          name: "GS WST - Lynda Paulson",
+          score: 85.3,
+          calls: 5,
+        },
+        {
+          name: "GS NST - Ron Hope",
+          score: 86.7,
+          calls: 5,
+        },
+        {
+          name: "VO MB - Eric Hughes",
+          score: 86.7,
+          calls: 1,
+        },
+        {
+          name: "ODS - Zackary Sherman",
+          score: 87.2,
+          calls: 6,
+        },
+        {
+          name: "ACT FTL - Diamond Wilson",
+          score: 87.3,
+          calls: 5,
+        },
+        {
+          name: "WST ACT - Amillie Joseph",
+          score: 88.9,
+          calls: 3,
+        },
+        {
+          name: "GS WST - Yvette Manaois",
+          score: 90.0,
+          calls: 6,
+        },
+        {
+          name: "Conf - Sabrina Cook",
+          score: 90.0,
+          calls: 2,
+        },
+        {
+          name: "ODS - China Sanchez",
+          score: 90.0,
+          calls: 10,
+        },
+        {
+          name: "WST ACT - Nicholas Valenzuela",
+          score: 90.0,
+          calls: 1,
+        },
+      ];
+
+      // Office data - excluding perfect scores for the chart
+      const allOffices = [
+        {
+          office: "AUD MB",
+          score: 97.7,
+          calls: 147,
+        },
+        {
+          office: "Activations",
+          score: 96.5,
+          calls: 118,
+        },
+        {
+          office: "ODS",
+          score: 95.9,
+          calls: 66,
+        },
+        {
+          office: "Downstream",
+          score: 95.2,
+          calls: 75,
+        },
+        {
+          office: "Service",
+          score: 87.1,
+          calls: 186,
+        },
+        {
+          office: "Confirmations",
+          score: 82.7,
+          calls: 14,
+        },
+      ];
+
+      const topIssues = [
+        { question: "# in Room", failures: 96 },
+        { question: "Understand Reschedule", failures: 89 },
+        { question: "Taxes", failures: 79 },
+        { question: "Matching IDs", failures: 77 },
+        { question: "9% Service Fee", failures: 68 },
+        { question: "Income Verify", failures: 57 },
+        { question: "Guest Name", failures: 56 },
+        { question: "Days & Nights", failures: 55 },
+        { question: "Confirmation", failures: 55 },
+        { question: "120 Min Present", failures: 39 },
+        { question: "Attending Together", failures: 36 },
+        { question: "No Group Travel", failures: 34 },
+      ];
+
+      // Office Time Series Data
+      const officeTimeSeriesData = {
+        Service: [
+          { date: "2025-09-08", score: 76.9, calls: 39 },
+          { date: "2025-09-09", score: 92.7, calls: 28 },
+          { date: "2025-09-10", score: 90.7, calls: 35 },
+          { date: "2025-09-11", score: 90.4, calls: 47 },
+          { date: "2025-09-12", score: 83.8, calls: 14 },
+          { date: "2025-09-14", score: 90.3, calls: 11 },
+          { date: "2025-09-15", score: 77.8, calls: 3 },
+        ],
+      };
+
+      // Chart initialization
+      let charts = {};
+
+      function initCharts() {
+        // Destroy existing charts
+        Object.values(charts).forEach((chart) => {
+          if (chart) chart.destroy();
+        });
+
+        // Office Comparison
+        const officeCtx = document.getElementById("officeComparison");
+        if (officeCtx) {
+          charts.office = new Chart(officeCtx.getContext("2d"), {
+            type: "bar",
+            data: {
+              labels: allOffices.map((o) => o.office),
+              datasets: [
+                {
+                  data: allOffices.map((o) => o.score),
+                  backgroundColor: allOffices.map((o) => {
+                    if (o.score >= 97) return "rgba(0, 100, 0, 0.9)"; // Dark green
+                    if (o.score >= 95) return "rgba(40, 167, 69, 0.8)"; // Green
+                    if (o.score >= 92) return "rgba(123, 201, 111, 0.8)"; // Light green
+                    if (o.score >= 88) return "rgba(255, 193, 7, 0.8)"; // Yellow
+                    if (o.score >= 85) return "rgba(255, 152, 0, 0.8)"; // Orange
+                    return "rgba(220, 53, 69, 0.8)"; // Red
+                  }),
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  min: 80,
+                  max: 100,
+                  ticks: {
+                    stepSize: 5,
+                    callback: (value) => value + "%",
+                  },
+                },
+                x: {
+                  ticks: {
+                    maxRotation: 45,
+                    minRotation: 45,
+                    autoSkip: false,
+                    font: {
+                      size: window.innerWidth < 768 ? 8 : 11,
+                    },
+                  },
+                },
+              },
+            },
+          });
+        }
+
+        // Team Member Ranking
+        const memberCtx = document.getElementById("teamMemberRanking");
+        if (memberCtx) {
+          charts.members = new Chart(memberCtx.getContext("2d"), {
+            type: "bar",
+            data: {
+              labels: allTeamMembers.map((m) => m.name),
+              datasets: [
+                {
+                  data: allTeamMembers.map((m) => m.score),
+                  backgroundColor: allTeamMembers.map((m) => {
+                    if (m.score >= 98) return "rgba(0, 100, 0, 0.9)"; // Dark green
+                    if (m.score >= 95) return "rgba(40, 167, 69, 0.8)"; // Green
+                    if (m.score >= 92) return "rgba(123, 201, 111, 0.8)"; // Light green
+                    if (m.score >= 88) return "rgba(255, 193, 7, 0.8)"; // Yellow
+                    if (m.score >= 85) return "rgba(255, 152, 0, 0.8)"; // Orange
+                    if (m.score >= 80) return "rgba(255, 111, 97, 0.8)"; // Light red
+                    return "rgba(220, 53, 69, 0.8)"; // Red
+                  }),
+                  barThickness: window.innerWidth < 768 ? 12 : 18,
+                },
+              ],
+            },
+            options: {
+              indexAxis: "y",
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+              },
+              scales: {
+                x: {
+                  beginAtZero: true,
+                  min: 70,
+                  max: 95,
+                  ticks: {
+                    stepSize: 5,
+                    callback: (value) => value + "%",
+                  },
+                },
+                y: {
+                  ticks: {
+                    autoSkip: false,
+                    font: {
+                      size: window.innerWidth < 768 ? 8 : 10,
+                    },
+                  },
+                },
+              },
+            },
+          });
+        }
+
+        // Score Distribution - excluding 100% scores
+        const distCtx = document.getElementById("scoreDistribution");
+        if (distCtx) {
+          charts.distribution = new Chart(distCtx.getContext("2d"), {
+            type: "bar",
+            data: {
+              labels: ["0-50%", "50-70%", "70-80%", "80-90%"],
+              datasets: [
+                {
+                  data: [21, 13, 12, 25],
+                  backgroundColor: [
+                    "#dc3545",
+                    "#ff6f61",
+                    "#ffc107",
+                    "#ffd700",
+                    "#90ee90",
+                    "#28a745",
+                    "#006400",
+                  ],
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+                title: {
+                  display: true,
+                  text: "Distribution of Non-Perfect Scores (328 calls)",
+                  font: {
+                    size: 12,
+                  },
+                },
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  title: {
+                    display: true,
+                    text: "Number of Calls",
+                  },
+                },
+              },
+            },
+          });
+        }
+
+        // Perfect Breakdown
+        const breakdownCtx = document.getElementById("perfectBreakdown");
+        if (breakdownCtx) {
+          charts.breakdown = new Chart(breakdownCtx.getContext("2d"), {
+            type: "doughnut",
+            data: {
+              labels: ["Perfect (100%)", "Imperfect (<100%)"],
+              datasets: [
+                {
+                  data: [418, 341],
+                  backgroundColor: [
+                    "rgba(0, 100, 0, 0.9)",
+                    "rgba(255, 193, 7, 0.8)",
+                  ],
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: "bottom",
+                  labels: {
+                    font: {
+                      size: window.innerWidth < 768 ? 10 : 12,
+                    },
+                  },
+                },
+              },
+            },
+          });
+        }
+
+        // Issues Chart
+        const issuesCtx = document.getElementById("questionFailures");
+        if (issuesCtx) {
+          charts.issues = new Chart(issuesCtx.getContext("2d"), {
+            type: "bar",
+            data: {
+              labels: topIssues.map((i) => i.question),
+              datasets: [
+                {
+                  data: topIssues.map((i) => i.failures),
+                  backgroundColor: "rgba(220, 53, 69, 0.8)",
+                },
+              ],
+            },
+            options: {
+              indexAxis: "y",
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+              },
+              scales: {
+                x: {
+                  beginAtZero: true,
+                },
+                y: {
+                  ticks: {
+                    font: {
+                      size: window.innerWidth < 768 ? 9 : 11,
+                    },
+                  },
+                },
+              },
+            },
+          });
+        }
+
+        // Office Time Series Chart
+        const timeSeriesCtx = document.getElementById("officeTimeSeries");
+        if (timeSeriesCtx) {
+          // Generate datasets for each office with different colors
+          const colors = [
+            "rgba(255, 99, 132, 1)", // Red
+            "rgba(54, 162, 235, 1)", // Blue
+            "rgba(255, 206, 86, 1)", // Yellow
+            "rgba(75, 192, 192, 1)", // Teal
+            "rgba(153, 102, 255, 1)", // Purple
+            "rgba(255, 159, 64, 1)", // Orange
+            "rgba(199, 199, 199, 1)", // Grey
+            "rgba(83, 102, 255, 1)", // Indigo
+          ];
+
+          const datasets = Object.keys(officeTimeSeriesData).map(
+            (office, index) => {
+              const officeData = officeTimeSeriesData[office];
+              return {
+                label: office,
+                data: officeData.map((d) => ({
+                  x: d.date,
+                  y: d.score,
+                })),
+                borderColor: colors[index % colors.length],
+                backgroundColor: colors[index % colors.length].replace(
+                  "1)",
+                  "0.1)",
+                ),
+                borderWidth: 3,
+                fill: false,
+                tension: 0.4,
+                pointBackgroundColor: colors[index % colors.length],
+                pointBorderColor: "white",
+                pointBorderWidth: 2,
+                pointRadius: 5,
+              };
+            },
+          );
+
+          charts.timeSeries = new Chart(timeSeriesCtx.getContext("2d"), {
+            type: "line",
+            data: {
+              datasets: datasets,
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  display: true,
+                  position: "top",
+                  labels: {
+                    usePointStyle: true,
+                    padding: 15,
+                    font: {
+                      size: window.innerWidth < 768 ? 10 : 12,
+                    },
+                  },
+                },
+                tooltip: {
+                  callbacks: {
+                    afterLabel: function (context) {
+                      const office = context.dataset.label;
+                      const dataPoint = officeTimeSeriesData[office].find(
+                        (d) => d.date === context.parsed.x,
+                      );
+                      return dataPoint ? `Calls: ${dataPoint.calls}` : "";
+                    },
+                  },
+                },
+              },
+              scales: {
+                x: {
+                  type: "time",
+                  time: {
+                    unit: "day",
+                    displayFormats: {
+                      day: "MMM dd",
+                    },
+                  },
+                  title: {
+                    display: true,
+                    text: "Date",
+                    font: {
+                      size: 14,
+                      weight: "bold",
+                    },
+                  },
+                },
+                y: {
+                  min: 70,
+                  max: 100,
+                  ticks: {
+                    callback: function (value) {
+                      return value + "%";
+                    },
+                  },
+                  title: {
+                    display: true,
+                    text: "Accuracy (%)",
+                    font: {
+                      size: 14,
+                      weight: "bold",
+                    },
+                  },
+                },
+              },
+            },
+          });
+        }
+      }
+
+      // Initialize on load
+      window.addEventListener("DOMContentLoaded", function () {
+        document.getElementById("generation-time").textContent =
+          new Date().toLocaleString();
+
+        // Initialize charts after a short delay for mobile
+        setTimeout(initCharts, 100);
+      });
+
+      // Reinitialize charts on resize
+      let resizeTimer;
+      window.addEventListener("resize", function () {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function () {
+          initCharts();
+        }, 250);
+      });
+
+      // Handle orientation change on mobile
+      window.addEventListener("orientationchange", function () {
+        setTimeout(initCharts, 300);
+      });
+    </script>
+  </body>
+</html>
+
